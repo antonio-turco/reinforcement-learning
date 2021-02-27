@@ -23,14 +23,15 @@ model = keras.models.Sequential([
 
 if os.path.exists(model_filepath):
     model.load_weights(model_filepath)
-    single_neuron_output.render_learnt_model(cartpole_env, model, 200)
 else:
     optimizer = keras.optimizers.Adam(lr=0.01)
     loss_fn = keras.losses.binary_crossentropy
 
-    learnt_model, trends = policy_gradient.fit(
+    model, trends = policy_gradient.fit(
         cartpole_env, model, optimizer, loss_fn, 25, 10, 200, 0.95)
 
-    learnt_model.save_weights(model_filepath)
+    model.save_weights(model_filepath)
 
     plots.policy_gradient.plot_reward_trend(trends, "Cart Pole", "pg-cart-pole-reward-trend.png")
+
+single_neuron_output.render_learnt_model(cartpole_env, model, 200)
