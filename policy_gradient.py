@@ -14,7 +14,7 @@ def play_one_step(environment, observation, model, loss_fn):
         loss = tf.reduce_mean(loss_fn(y_target, left_proba))
     grads = tape.gradient(loss, model.trainable_variables)
     obs, reward, done, info = environment.step(int(action[0, 0].numpy()))
-    return obs, reward, done, info, grads
+    return obs, reward, done, grads
 
 
 def play_multiple_episodes(env, n_episodes, n_max_steps, model, loss_fn):
@@ -42,7 +42,6 @@ def play_multiple_episodes(env, n_episodes, n_max_steps, model, loss_fn):
 def discount_rewards(rewards, discount_factor):
     discounted_rewards = np.array(rewards)
     before_last_index = len(rewards) - 2
-    # stops -1 means stops at 0 included
     for frame in range(before_last_index, -1, -1):
         discounted_rewards[frame] += discounted_rewards[frame +
                                                         1] * discount_factor
@@ -51,7 +50,7 @@ def discount_rewards(rewards, discount_factor):
 
 def discount_and_normalize_rewards(all_rewards, discount_factor):
     all_discounted_rewards = [
-        discount_rewards(rewards) for rewards in all_rewards
+        discount_rewards(rewards, discount_factor) for rewards in all_rewards
     ]
 
     flat_rewards = np.concatenate(all_discounted_rewards)
@@ -67,9 +66,17 @@ def discount_and_normalize_rewards(all_rewards, discount_factor):
 
 
 def fit(env, model, optimizer, loss_fn, n_iterations, n_episodes_per_update, n_max_steps, discount_factor):
-    for _ in range(n_iterations):
+    metrics_trend = []
+    for iteration in range(n_iterations):
         all_rewards, all_gradients = play_multiple_episodes(
             env, n_episodes_per_update, n_max_steps, model, loss_fn)
+
+        total_rewards = sum(map(sum, all_rewards))
+        current_mean_reward = total_rewards / n_episodes_per_update
+        print("\rIteration: {}, mean rewards: {:.1f}".format(
+            iteration, current_mean_reward), end="")
+        metrics_trend.append(current_mean_reward)
+
         all_final_rewards = discount_and_normalize_rewards(
             all_rewards, discount_factor)
         all_mean_gradients = []
@@ -82,5 +89,5 @@ def fit(env, model, optimizer, loss_fn, n_iterations, n_episodes_per_update, n_m
             mean_gradients = tf.reduce_mean(gradients_rewarded, axis=0)
             all_mean_gradients.append(mean_gradients)
         optimizer.apply_gradients(
-            zip(all_mean_gradients, model.trainable_variaibles))
-    return model
+            zip(all_mean_gradients, model.trainable_variables))
+    return model, metrics_trend
