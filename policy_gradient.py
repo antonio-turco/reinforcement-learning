@@ -45,8 +45,7 @@ def discount_rewards(rewards, discount_factor):
     discounted_rewards = np.array(rewards)
     before_last_index = len(rewards) - 2
     for frame in range(before_last_index, -1, -1):
-        discounted_rewards[frame] += discounted_rewards[frame +
-                                                        1] * discount_factor
+        discounted_rewards[frame] += discounted_rewards[frame + 1] * discount_factor
     return discounted_rewards
 
 
