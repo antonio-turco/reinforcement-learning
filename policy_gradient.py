@@ -34,6 +34,8 @@ def play_multiple_episodes(env, n_episodes, n_max_steps, model, loss_fn):
                 env, obs, model, loss_fn)
             current_rewards.append(reward)
             current_gradients.append(gradients)
+            step_index += 1
+
         all_rewards.append(current_rewards)
         all_gradients.append(current_gradients)
     return all_rewards, all_gradients
