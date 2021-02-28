@@ -4,16 +4,17 @@ import numpy as np
 
 def play_one_step(environment, observation, model, loss_fn):
     with tf.GradientTape() as tape:
-        left_proba = model(observation[np.newaxis])
-        action = (tf.random.uniform([1, 1]) > left_proba)
-        # if action is left, then target prob is 1
-        # else target prob is 0
-        y_target = tf.constant([[1.]]) - tf.cast(action, tf.float32)
+        action_log_probabiliy = model(observation[np.newaxis])
+        action_index = tf.random.categorical(action_log_probabiliy, 1)[0, 0]
+        all_zero = tf.zeros(shape=action_log_probabiliy.shape)
+        delta = tf.SparseTensor([[0, action_index]], [1.0], action_log_probabiliy.shape)
+        y_target = all_zero + tf.sparse.to_dense(delta)
+        # .assign(tf.constant(1.0, shape=[1, 1]))
         # if the target is correct move the prediction to that target
         # otherwise move away from the target
-        loss = tf.reduce_mean(loss_fn(y_target, left_proba))
+        loss = tf.reduce_mean(loss_fn(y_target, action_log_probabiliy))
     grads = tape.gradient(loss, model.trainable_variables)
-    obs, reward, done, info = environment.step(int(action[0, 0].numpy()))
+    obs, reward, done, info = environment.step(action_index.numpy())
     return obs, reward, done, grads
 
 
