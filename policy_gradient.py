@@ -9,7 +9,6 @@ def play_one_step(environment, observation, model, loss_fn):
         all_zero = tf.zeros(shape=action_log_probabiliy.shape)
         delta = tf.SparseTensor([[0, action_index]], [1.0], action_log_probabiliy.shape)
         y_target = all_zero + tf.sparse.to_dense(delta)
-        # .assign(tf.constant(1.0, shape=[1, 1]))
         # if the target is correct move the prediction to that target
         # otherwise move away from the target
         loss = tf.reduce_mean(loss_fn(y_target, action_log_probabiliy))
@@ -36,7 +35,6 @@ def play_multiple_episodes(env, n_episodes, n_max_steps, model, loss_fn):
             current_rewards.append(reward)
             current_gradients.append(gradients)
             step_index += 1
-
         all_rewards.append(current_rewards)
         all_gradients.append(current_gradients)
     return all_rewards, all_gradients
