@@ -3,9 +3,9 @@ import gym
 import policy_gradient
 import numpy as np
 import tensorflow as tf
-import os
 import plots.policy_gradient
 import renderer
+
 '''
 gym_name = "CartPole-v1"
 experiment_name = "Cart Pole"
@@ -37,7 +37,7 @@ def train_model(gym_name, experiment_name, plot_path, model_filepath):
     loss_fn = keras.losses.binary_crossentropy
 
     model, trends = policy_gradient.fit(
-        environment, model, optimizer, loss_fn, 150, 10, 200, 0.95)
+        environment, model, optimizer, loss_fn, 50, 15, 200, 0.99999)
 
     model.save_weights(model_filepath)
 
